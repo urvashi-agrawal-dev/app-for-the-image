@@ -1,180 +1,243 @@
-# Design Guidelines: Financial Advisor Pricing & Market Analysis Platform
+# Design Guidelines: AI Image Generation Platform
 
 ## Design Approach
-**Framework**: Carbon Design System principles adapted for financial data applications
-**References**: Stripe Dashboard (clean SaaS aesthetics), Tableau (data visualization clarity), Linear (modern navigation patterns)
-**Rationale**: Enterprise-grade data tool requiring information density, scanning efficiency, and professional credibility
+**Framework**: Modern creative platform inspired by Midjourney, DALL-E, and Runway
+**References**: Linear (clean navigation), Dribbble (creative showcase), Notion (intuitive UX)
+**Rationale**: Creative tool for AI image generation requiring visual appeal, intuitive workflows, and gallery-focused design
 
 ## Core Design Principles
-1. **Data-First Hierarchy**: Information clarity over decoration
-2. **Scannable Layouts**: Enable rapid data comparison and analysis
-3. **Professional Trust**: Clean, authoritative interface for financial context
-4. **Efficient Workflows**: Minimize clicks to insights
+1. **Visual-First**: Showcase generated images prominently with large previews
+2. **Creative Flow**: Smooth, uninterrupted generation workflow from prompt to download
+3. **Modern Aesthetic**: Contemporary design with gradients, soft shadows, and premium feel
+4. **Accessible Creation**: Simple, clear interface that welcomes all skill levels
 
 ---
 
 ## Typography System
 
 **Font Stack**: 
-- Primary: Inter (via Google Fonts) - excellent for data/numbers
-- Monospace: JetBrains Mono - for API keys, code snippets
+- Primary: Inter (via Google Fonts) - modern, clean, professional
+- Monospace: JetBrains Mono - for prompts and technical details
 
 **Hierarchy**:
-- Page Titles: text-3xl font-semibold
-- Section Headers: text-xl font-semibold
-- Card Titles: text-lg font-medium
+- Hero Titles: text-4xl md:text-5xl font-bold
+- Page Titles: text-3xl font-bold
+- Section Headers: text-2xl font-semibold
+- Card Titles: text-lg font-semibold
 - Body Text: text-base font-normal
-- Data Labels: text-sm font-medium
-- Metrics/Numbers: text-2xl font-bold (monospace for precision)
-- Table Headers: text-sm font-semibold uppercase tracking-wide
-- Captions/Metadata: text-xs
+- Captions/Metadata: text-sm text-muted-foreground
+- Small Labels: text-xs font-medium
+
+---
+
+## Color System
+
+**Primary Brand Colors**:
+- Primary: Vibrant purple gradient (from violet to fuchsia)
+- Secondary: Soft blue accent
+- Success: Green for completed generations
+- Destructive: Red for errors and deletions
+
+**UI Colors**:
+- Background: Clean white (light mode), deep dark (dark mode)
+- Cards: Slightly elevated from background
+- Borders: Subtle, low-contrast
+- Text: High contrast for readability
 
 ---
 
 ## Layout System
 
-**Spacing Primitives**: Tailwind units of 2, 4, 6, 8, 12, 16
-- Component padding: p-4, p-6
-- Section spacing: gap-6, gap-8
-- Card spacing: p-6
-- Table cell padding: px-4 py-3
+**Spacing Primitives**: Consistent spacing using 4, 6, 8, 12, 16, 24
+- Page padding: p-6 md:p-8
+- Card padding: p-6
+- Section gaps: gap-6 md:gap-8
+- Grid gaps: gap-4 md:gap-6
 
 **Grid Structure**:
 - Main container: max-w-7xl mx-auto
-- Dashboard grid: grid-cols-12 for flexible layouts
-- Stat cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-4
-- Content + Sidebar: 3:1 or 4:1 ratio
+- Image gallery: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+- Model selection: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+- Full-width generation interface
 
 ---
 
 ## Application Structure
 
-### Primary Navigation
-Left sidebar (fixed, 240px width on desktop):
-- Logo/branding top
-- Main navigation items with icons (Heroicons)
-- API Management section
-- User profile bottom
-- Mobile: collapsible hamburger menu
+### Landing Page (Logged Out)
+- Hero section with gradient background
+- Large heading describing the platform
+- Example generated images in background
+- Prominent "Get Started" CTA button linking to /api/login
+- Features section highlighting AI models available
+- Clean, minimal footer
 
-### Dashboard Layout
-Main content area with:
-- Top bar: Page title, date range selector, export buttons, API status indicator
-- KPI Cards Row: 4-column grid showing key metrics (Total Competitors Tracked, Market Trend, Avg Price Change, Data Points)
-- Primary Content: Two-column layout
-  - Left (67%): Large comparison chart showing competitor pricing over time
-  - Right (33%): Top competitors ranking list
-- Data Tables Section: Sortable, filterable competitor pricing table with pagination
-- Market Trends Section: Multiple smaller charts showing different trend analyses
+### Home/Dashboard (Logged In)
+- Top navigation bar with logo, user menu, logout
+- Main content area with:
+  - Welcome message with user's name
+  - Quick action: "Create New Image" button
+  - Recent generations gallery (grid of image cards)
+  - Model selector cards
+
+### Image Generation Interface
+- Full-width textarea for prompt input
+- Model selector dropdown (DALL-E 3, DALL-E 2, future: Stable Diffusion, Midjourney)
+- Size/quality options
+- "Generate Image" primary button
+- Loading state with progress indicator
+- Generated image display with large preview
+- Download and Share action buttons
+
+### Gallery View
+- Masonry or grid layout of all user's generated images
+- Image cards with:
+  - Large thumbnail
+  - Prompt text (truncated)
+  - Generation date
+  - Model used badge
+  - Quick actions: View, Download, Delete
+- Infinite scroll or pagination
+- Filter by model/date
+
+### Image Detail View
+- Full-size image display
+- Complete prompt text
+- Metadata: model, size, date, time
+- Download button (various sizes)
+- Delete button
+- Share options (copy link, social media)
+- Attribution text crediting the platform creator
 
 ---
 
 ## Component Library
 
 ### Cards
-- Elevated cards with subtle borders
-- Consistent p-6 padding
-- Header section with title + action button
-- Clear visual separation between sections within cards
-
-### Data Tables
-- Sticky headers for long scrolls
-- Alternating row treatment for scannability
-- Sortable columns with arrow indicators
-- Inline edit capability for competitor data
-- Row hover states for clarity
-- Cell padding: px-4 py-3
-
-### Charts & Visualizations
-Use Chart.js or similar library
-- Line charts: Pricing trends over time
-- Bar charts: Competitor comparisons
-- Area charts: Market trend analysis
-- Consistent axis styling and grid lines
-- Tooltips on hover with precise values
-- Legend placement: top-right for multi-series
-
-### Forms & Inputs
-- Label above input pattern
-- Input fields: Full width within containers, h-10, px-4
-- Select dropdowns: Chevron icon right
-- Date pickers: Calendar icon left
-- Search: Magnifying glass icon left
-- Validation: Inline error messages below fields
+- Soft shadows for depth
+- Rounded corners (rounded-lg)
+- Hover states with subtle lift effect
+- Image cards have aspect-ratio preservation
+- Padding: p-4 or p-6 depending on content density
 
 ### Buttons
-- Primary CTA: px-6 py-2.5 rounded-lg font-medium
-- Secondary: Same padding, outline variant
-- Icon buttons: w-10 h-10 for consistency
-- Button groups: Connected buttons for related actions
+- Primary: Gradient background, white text, rounded-lg
+- Secondary: Outline with hover fill
+- Ghost: Transparent with hover background
+- Icon buttons: Consistent size, subtle hover
+- Loading states with spinner
 
-### API Management Interface
-Dedicated section featuring:
-- API key generation form
-- Active keys table with creation date, last used, permissions
-- Copy-to-clipboard functionality
-- Code snippets showing integration examples
-- Rate limit monitoring visualization
-- Webhook configuration interface
+### Forms & Inputs
+- Textarea for prompts: Large, auto-expanding, placeholder text
+- Select dropdowns: Custom styled with icons
+- Input fields: Clean borders, focus rings
+- Labels: Above inputs, font-medium
 
-### Filters & Controls
-- Date range selector: Dropdown with presets (Last 7 days, 30 days, Quarter, Year, Custom)
-- Multi-select filters for competitors
-- Search bar for quick filtering
-- "Clear all filters" reset button
-- Applied filters display as dismissible chips
+### Image Display
+- Aspect ratio containers to prevent layout shift
+- Skeleton loaders while images load
+- Lazy loading for performance
+- Zoom on click for detail view
+- Download/share overlays on hover
 
----
+### Loading States
+- Skeleton cards in gallery
+- Progress bar during generation
+- Spinner for quick actions
+- Animated gradient for long operations
 
-## Data Visualization Patterns
-
-**Pricing Comparison View**:
-- Multi-line chart showing 5-8 competitors simultaneously
-- Different line styles for distinction
-- Y-axis: Price range
-- X-axis: Time period
-- Interactive legend to toggle competitors
-
-**Market Trends Dashboard**:
-- Grid of 6 smaller charts (grid-cols-2 lg:grid-cols-3)
-- Each showing different market indicator
-- Consistent height: h-64 per chart
-
-**Competitor Detail Modal**:
-- Full-screen overlay with detailed competitor analysis
-- Historical pricing table
-- Trend graphs
-- Notes/annotations section
+### Empty States
+- Centered messaging
+- Illustrative icons
+- Clear call-to-action
+- Friendly, encouraging copy
 
 ---
 
-## Navigation Patterns
+## AI Model Integration
 
-**Main Dashboard**: Default view with overview metrics
-**Competitors**: Full list/grid view with add/edit capabilities
-**Market Analysis**: Deep-dive into trend analysis
-**Reports**: Export and schedule report generation
-**API Access**: Developer documentation and key management
-**Settings**: User preferences and data source configuration
+### Supported Models (Initial)
+1. **DALL-E 3** (Default, Recommended)
+   - Highest quality
+   - Best prompt understanding
+   - 1024x1024, 1024x1792, 1792x1024 sizes
+   
+2. **DALL-E 2**
+   - Faster generation
+   - 256x256, 512x512, 1024x1024 sizes
+   - Cost-effective option
+
+### Model Selection UI
+- Card-based selector with model logos/icons
+- Brief description of each model's strengths
+- Recommended badge on DALL-E 3
+- Visual distinction between models
+
+---
+
+## User Flows
+
+### First-Time User
+1. Land on homepage → See compelling hero with example images
+2. Click "Get Started" → Redirect to auth (Replit Auth handles this)
+3. After login → Welcome to dashboard with empty state
+4. Click "Create Image" → Generation interface
+5. Enter prompt → Select model → Generate
+6. View result → Download/Share → Success!
+
+### Returning User
+1. Login → Dashboard with recent generations
+2. Quick access to create new or view gallery
+3. Seamless generation workflow
+4. Gallery management and downloads
 
 ---
 
 ## Responsive Behavior
 
-Desktop (lg+): Full sidebar + multi-column layouts
-Tablet (md): Collapsed sidebar icon-only + 2-column grids
-Mobile: Hidden sidebar (hamburger menu) + single-column stacks
+**Desktop (lg+)**: 
+- Full navigation
+- Multi-column grids
+- Large image previews
+- Sidebar for filters/options
+
+**Tablet (md)**:
+- 2-column grids
+- Collapsible sections
+- Touch-optimized buttons
+
+**Mobile (sm)**:
+- Single column
+- Stack all content
+- Bottom navigation for key actions
+- Full-width prompts and previews
+
+---
+
+## Dark Mode Support
+
+- Fully implement dark mode toggle
+- Dark backgrounds with proper contrast
+- Adjust gradients for dark theme
+- Images display well on both backgrounds
+- Smooth transition between modes
+
+---
+
+## Attribution & Crediting
+
+- Footer on all pages: "Platform created by [Creator Name]"
+- Share feature includes attribution
+- Downloaded images have optional watermark
+- About section explains the platform
 
 ---
 
 ## Accessibility
-- ARIA labels on all interactive elements
-- Keyboard navigation for tables (arrow keys)
-- Focus indicators on all focusable elements
-- Screen reader announcements for data updates
-- High contrast for data visualization
 
----
-
-## No Images Required
-This is a data-centric business tool - no hero images or decorative photography needed. Interface clarity through typography, spacing, and data visualization is paramount.
+- Alt text for all images (use generation prompts)
+- Keyboard navigation throughout
+- ARIA labels on interactive elements
+- Focus indicators
+- High contrast mode support
+- Screen reader friendly

@@ -1,38 +1,79 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import {
+  users,
+  generatedImages,
+  type User,
+  type UpsertUser,
+  type GeneratedImage,
+  type InsertGeneratedImage,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Interface for storage operations
 export interface IStorage {
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Generated images operations
+  createGeneratedImage(image: InsertGeneratedImage): Promise<GeneratedImage>;
+  getUserImages(userId: string): Promise<GeneratedImage[]>;
+  getImageById(id: string): Promise<GeneratedImage | undefined>;
+  deleteImage(id: string, userId: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Generated images operations
+  async createGeneratedImage(imageData: InsertGeneratedImage): Promise<GeneratedImage> {
+    const [image] = await db
+      .insert(generatedImages)
+      .values(imageData)
+      .returning();
+    return image;
+  }
+
+  async getUserImages(userId: string): Promise<GeneratedImage[]> {
+    return await db
+      .select()
+      .from(generatedImages)
+      .where(eq(generatedImages.userId, userId))
+      .orderBy(desc(generatedImages.createdAt));
+  }
+
+  async getImageById(id: string): Promise<GeneratedImage | undefined> {
+    const [image] = await db
+      .select()
+      .from(generatedImages)
+      .where(eq(generatedImages.id, id));
+    return image;
+  }
+
+  async deleteImage(id: string, userId: string): Promise<void> {
+    await db
+      .delete(generatedImages)
+      .where(eq(generatedImages.id, id));
+  }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

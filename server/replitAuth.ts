@@ -11,6 +11,10 @@ import { storage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
+    // For development/Android app, skip Replit auth
+    if (process.env.NODE_ENV === 'development' && !process.env.REPL_ID?.startsWith('replit-')) {
+      return null;
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
@@ -21,6 +25,21 @@ const getOidcConfig = memoize(
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  
+  // For development, use memory store instead of database
+  if (process.env.NODE_ENV === 'development') {
+    return session({
+      secret: process.env.SESSION_SECRET || 'dev-secret-key',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: false, // Allow non-https in development
+        maxAge: sessionTtl,
+      },
+    });
+  }
+  
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -64,7 +83,7 @@ async function upsertUser(
 }
 
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
+  app.set("trust proxy", process.env.NODE_ENV === 'production' ? 1 : 0);
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
@@ -86,6 +105,11 @@ export async function setupAuth(app: Express) {
 
   // Helper function to ensure strategy exists for a domain
   const ensureStrategy = (domain: string) => {
+    if (!config) {
+      // Development mode without Replit auth - use mock
+      return;
+    }
+    
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const strategy = new Strategy(
@@ -106,6 +130,25 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    if (!config) {
+      // Development mode - create mock user session
+      req.logIn({ 
+        claims: { 
+          sub: 'dev-user-' + Date.now(),
+          email: 'dev@localhost.local',
+          first_name: 'Dev',
+          last_name: 'User'
+        },
+        access_token: 'mock-token',
+        refresh_token: 'mock-refresh',
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      } as any, (err) => {
+        if (err) return next(err);
+        res.redirect('/');
+      });
+      return;
+    }
+
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
@@ -114,6 +157,11 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
+    if (!config) {
+      res.redirect('/');
+      return;
+    }
+
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
@@ -123,12 +171,16 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
+      if (config) {
+        res.redirect(
+          client.buildEndSessionUrl(config, {
+            client_id: process.env.REPL_ID!,
+            post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          }).href
+        );
+      } else {
+        res.redirect('/');
+      }
     });
   });
 }
@@ -153,6 +205,9 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   try {
     const config = await getOidcConfig();
+    if (!config) {
+      return next(); // In dev mode without Replit auth, just pass through
+    }
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
     return next();
